@@ -1,141 +1,115 @@
 #include <iostream>
 #include <vector>
-#include <numeric>
-#include <string>
 
 using namespace std;
 
-class Student {
+class Time {
 private:
+    int seconds;
+
+public:
+    Time(int secs = 0) : seconds(secs) {}
+
+    operator int() const { return seconds; }
+
+    friend std::istream& operator>>(std::istream& is, Time& t) {
+        int h = 0, m = 0, s = 0;
+        char sep;
+        is >> h >> sep >> m >> sep >> s;
+        t.seconds = h * 3600 + m * 60 + s;
+        return is;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Time& t) {
+        os << t.hours() << "h:" << t.minutes() % 60 << "m:" << t.seconds % 60 << "s";
+        return os;
+    }
+
+    Time operator+(const Time& other) const {
+        return Time(seconds + other.seconds);
+    }
+
+    Time operator-(const Time& other) const {
+        return Time(seconds - other.seconds);
+    }
+
+    Time operator*(int scalar) const {
+        return Time(seconds * scalar);
+    }
+
+private:
+    int hours() const { return seconds / 3600; }
+    int minutes() const { return seconds / 60; }
+};
+
+class Item {
+public:
     std::string name;
-    std::string surname;
-    std::string albumNumber;
-    std::vector<float> grades;
+    double unit_net_price;
+    char VAT_type;
+    int quantity;
 
-public:
-    Student(const std::string& initName = "", const std::string& initSurname = "", const std::string& initAlbumNumber = "", const std::vector<float>& initGrades = {}){
-        name = initName;
-        surname = initSurname;
-        albumNumber = initAlbumNumber;
-        grades = initGrades;
-        if (!isValidAlbumNumber(initAlbumNumber)) {
-            cout << "Invalid album number provided" << endl;
-            albumNumber = "";
+    Item(std::string n, double price, char VAT, int qty)
+        : name(n), unit_net_price(price), VAT_type(VAT), quantity(qty) {}
+
+    friend std::ostream& operator<<(std::ostream& os, const Item& item) {
+        double total = item.unit_net_price * item.quantity * (1 + item.VAT_rate());
+        os << item.name << " | " << item.unit_net_price << " " << item.VAT_type << " | " << item.quantity << " | " << item.unit_net_price * item.quantity << " | " << total;
+        return os;
+    }
+
+    double VAT_rate() const {
+        switch (VAT_type) {
+        case 'A': return 0.23;
+        case 'B': return 0.08;
+        case 'C': return 0.00;
+        default: return 0.0;
         }
-    }
-
-    void setName(const std::string& newName) {
-        name = newName;
-    }
-
-    void setSurname(const std::string& newSurname) {
-        surname = newSurname;
-    }
-
-    bool setAlbumNumber(const std::string& newAlbumNumber) {
-        if (isValidAlbumNumber(newAlbumNumber)) {
-            albumNumber = newAlbumNumber;
-            return true;
-        }
-        return false;
-    }
-
-    bool add_grade(float grade) {
-        if (grade >= 2.0 && grade <= 5.0) {
-            grades.push_back(grade);
-            return true;
-        }
-        return false;
-    }
-
-    float calculate_grade() const {
-        if (grades.empty()) {
-            return 0.0f;
-        }
-        float sum = std::accumulate(grades.begin(), grades.end(), 0.0f);
-        return sum / grades.size();
-    }
-
-    bool passedSemester() const {
-        int countFail = count(grades.begin(), grades.end(), 2.0f);
-        return countFail <= 1;
-    }
-
-    void print() const {
-        std::cout << "Student: " << name << " " << surname << " Album Number: " << albumNumber << " Grades:";
-        for (const auto& grade : grades) {
-            std::cout << " " << grade;
-        }
-        std::cout << "Mean Grade: " << calculate_grade();
-        std::cout << "Passed: " << (passedSemester() ? "Yes" : "No") << std::endl;
-    }
-
-private:
-    bool isValidAlbumNumber(const std::string& number) const {
-        if (number.length() < 5 || number.length() > 6) return false;
-        return all_of(number.begin(), number.end(), ::isdigit);
     }
 };
 
-class Complex {
-private:
-    double real;
-    double imag;
-
+class Invoice {
 public:
+    long seller_NIP, buyer_NIP;
+    std::vector<Item> items;
 
-    Complex(double r, double i = 0.0){
-        real = r;
-        imag = i;
+    Invoice(long seller, long buyer) : seller_NIP(seller), buyer_NIP(buyer) {}
+
+    void add_item(const Item& item) {
+        items.push_back(item);
     }
 
-    void set_real(double r) {
-        real = r;
-    }
-
-    void set_im(double i) {
-        imag = i;
-    }
-
-    double get_real() const {
-        return real;
-    }
-
-    double get_im() const {
-        return imag;
-    }
-
-    void print() const {
-        if (imag >= 0) {
-            std::cout << real << "+" << imag << "i" << std::endl;
-        } else {
-            std::cout << real << imag << "i" << std::endl;
+    friend std::ostream& operator<<(std::ostream& os, const Invoice& inv) {
+        os << "------------------VAT invoice------------------\n";
+        os << "Seller: " << inv.seller_NIP << "      Buyer: " << inv.buyer_NIP << "\n\n";
+        double net_total = 0, gross_total = 0;
+        for (const auto& item : inv.items) {
+            net_total += item.unit_net_price * item.quantity;
+            gross_total += item.unit_net_price * item.quantity * (1 + item.VAT_rate());
+            os << item << "\n";
         }
-    }
-
-    Complex add(const Complex& other) const {
-        return Complex(real + other.real, imag + other.imag);
-    }
-
-    Complex operator+(const Complex& other) const {
-        return add(other);
+        os << "------------------------------------ TOTAL ----\n";
+        os << "                                " << net_total << " | " << gross_total << "\n";
+        return os;
     }
 };
 
-int main() {
-    Student student("Some", "Student", "12345", {2, 3, 4, 5, 3});
-    student.print();
-    if (!student.setAlbumNumber("1234")) {
-        cout << "Failed to update album number: invalid format." << endl;
-    }
+int main (){
 
-    Complex a(1.0, -2.0);
-    Complex b(3.14);
-    b.set_im(-5);
+    Time t1(200);
+    cout << t1 << endl; // displays 03m:20s
+    Time t2;
+    cin >> t2; // user enters 10h:12m:01s
 
-    Complex c = a + b;
+    Time t3 = t2 - t1; // 10h:8m:41s
+    int t3s = t3; //    36521
+    cout << t3s << endl;
+    cout << " " << endl;
 
-    c.print();
+
+    Invoice inv(7770003699, 0123456);
+    inv.add_item(Item("M3 screw", 0.37, 'A', 100));
+    inv.add_item(Item("2 mm drill", 2.54, 'B', 2));
+    std::cout << inv << std::endl;
     return 0;
 }
-

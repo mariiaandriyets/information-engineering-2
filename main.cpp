@@ -13,8 +13,11 @@ private:
     std::vector<float> grades;
 
 public:
-    Student(const std::string& initName = "", const std::string& initSurname = "", const std::string& initAlbumNumber = "", const std::vector<float>& initGrades = {})
-        : name(initName), surname(initSurname), albumNumber(initAlbumNumber), grades(initGrades) {
+    Student(const std::string& initName = "", const std::string& initSurname = "", const std::string& initAlbumNumber = "", const std::vector<float>& initGrades = {}){
+        name = initName;
+        surname = initSurname;
+        albumNumber = initAlbumNumber;
+        grades = initGrades;
         if (!isValidAlbumNumber(initAlbumNumber)) {
             cout << "Invalid album number provided" << endl;
             albumNumber = "";
@@ -74,12 +77,65 @@ private:
     }
 };
 
+class Complex {
+private:
+    double real;
+    double imag;
+
+public:
+
+    Complex(double r, double i = 0.0){
+        real = r;
+        imag = i;
+    }
+
+    void set_real(double r) {
+        real = r;
+    }
+
+    void set_im(double i) {
+        imag = i;
+    }
+
+    double get_real() const {
+        return real;
+    }
+
+    double get_im() const {
+        return imag;
+    }
+
+    void print() const {
+        if (imag >= 0) {
+            std::cout << real << "+" << imag << "i" << std::endl;
+        } else {
+            std::cout << real << imag << "i" << std::endl;
+        }
+    }
+
+    Complex add(const Complex& other) const {
+        return Complex(real + other.real, imag + other.imag);
+    }
+
+    Complex operator+(const Complex& other) const {
+        return add(other);
+    }
+};
+
 int main() {
     Student student("Some", "Student", "12345", {2, 3, 4, 5, 3});
     student.print();
     if (!student.setAlbumNumber("1234")) {
         cout << "Failed to update album number: invalid format." << endl;
     }
+
+    Complex a(1.0, -2.0);
+    Complex b(3.14);
+    b.set_im(-5);
+
+    Complex c = a + b;
+
+    c.print();
     return 0;
 }
 

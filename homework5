@@ -1,0 +1,83 @@
+#include <SFML/Graphics.hpp>
+#include <iostream>
+
+int main() {
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Labyrinth Game");
+
+    sf::Texture texture_grass;
+    if (!texture_grass.loadFromFile("/Users/mac/Desktop/grass.png")) {
+        std::cerr << "Не удалось загрузить текстуру grass.png" << std::endl;
+        return 1;
+    }
+    texture_grass.setRepeated(true);
+
+    sf::Texture texture_wall;
+    if (!texture_wall.loadFromFile("/Users/mac/Desktop/wall.png")) {
+        std::cerr << "Не удалось загрузить текстуру wall.png" << std::endl;
+        return 1;
+    }
+
+    sf::Texture texture_guy;
+    if (!texture_guy.loadFromFile("/Users/mac/Desktop/guy.png")) {
+        std::cerr << "Не удалось загрузить текстуру guy.png" << std::endl;
+        return 1;
+    }
+
+    sf::Sprite background;
+    background.setTexture(texture_grass);
+    background.setTextureRect(sf::IntRect(0, 0, window.getSize().x, window.getSize().y));
+
+    sf::Sprite wall;
+    wall.setTexture(texture_wall);
+    wall.setTextureRect(sf::IntRect(0, 0, 200, 200));
+    wall.setPosition(300, 150);
+
+    sf::Sprite guy;
+    guy.setTexture(texture_guy);
+    guy.setPosition(100, 100);
+
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+
+        float moveSpeed = 0.5f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+            guy.move(-moveSpeed, 0);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+            guy.move(moveSpeed, 0);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+            guy.move(0, -moveSpeed);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+            guy.move(0, moveSpeed);
+        }
+
+        if (guy.getGlobalBounds().intersects(wall.getGlobalBounds())) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+                guy.move(moveSpeed, 0);
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+                guy.move(-moveSpeed, 0);
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+                guy.move(0, moveSpeed);
+            }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+                guy.move(0, -moveSpeed);
+            }
+        }
+
+        window.clear();
+        window.draw(background);
+        window.draw(wall);
+        window.draw(guy);
+        window.display();
+    }
+
+    return 0;
+}
